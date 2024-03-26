@@ -17,7 +17,7 @@ spec:
   subnetSelectorTerms:
   - tags:
       karpenter.sh/discovery: ${DISCOVER_SUBNET_TAG_VALUE}
-  userData:
+  userData: |
     #! /bin/bash
     echo -e "InhibitDelayMaxSec=45\n" >> /etc/systemd/logind.conf
     systemctl restart systemd-logind
