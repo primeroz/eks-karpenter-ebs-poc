@@ -34,7 +34,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: inflate-arm64
-        image: busybox
+        image: alpine:3
         command: [ "sleep" , "infinity" ]
         resources:
           requests:
