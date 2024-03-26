@@ -8,6 +8,18 @@
 * make ebs/install
 * make karpenter/install
 * make karpenter/resources
-* make k8s/workload
+
+---
+### Create workload for testing
+
+* make k8s/workloads
 * export KUBECONFIG=/tmp/demo-eu-west-3-kubeconfig
 * kubectl get pod -n default 
+
+
+---
+### Patch nodepool and watch pod 
+
+*  kubectl patch nodepool testarm64 --type merge -p '{"spec":{"template":{"metadata":{"annotations":{"restart/epoch":"'"$(date +%s)"'"}}}}}' 
+* kubectl get pod -w 
+* kubectl get events -w 
