@@ -1,0 +1,48 @@
+apiVersion: apps/v1                                                                                                     
+kind: StatefulSet                                                                                                       
+metadata:                                                                                                                                                                                                                                       
+  name: inflate-arm64
+  namespace: default                                                                                                                                                                                                                            
+spec:                                                                                                                                                                                                                                           
+  serviceName: "inflate-arm64"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inflate-arm64
+  template:
+    metadata:
+      labels:
+        app: inflate-arm64
+    spec:
+      affinity:
+        podAntiAffinity: 
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - inflate-arm64
+            topologyKey: "kubernetes.io/hostname"
+      nodeSelector:
+        karpenter.sh/nodepool: testarm64
+      terminationGracePeriodSeconds: 0
+      tolerations:
+      - key: "karpenter"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      containers:
+      - name: inflate-arm64
+        image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+        resources:
+          requests:
+            cpu: 200m
+  volumeClaimTemplates:
+  - metadata:
+      name: data 
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

@@ -3,6 +3,7 @@ CLUSTER_VERSION = "1.26"
 REGION = "eu-west-3"
 
 KARPENTER_VERSION := 0.35.2
+EBS_CSI_VERSION := 2.29.0
 
 KUBECONFIG_PATH := /tmp/$(CLUSTER_NAME)-$(REGION)-kubeconfig
 export KUBECONFIG := $(shell echo $(KUBECONFIG_PATH) | sed 's/"//g')
@@ -45,7 +46,7 @@ eks/validate: eks/kubeconfig
 	$(KUBECTL) cluster-info
 	$(KUBECTL) get node 
 
-.PHONY: karpenter/install karpenter/resources
+.PHONY: karpenter/install karpenter/resources ebs/install k8s/workloads
 
 karpenter/install:
 	$(HELM) upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter --version "$(KARPENTER_VERSION)" --namespace "karpenter" --create-namespace \
@@ -64,5 +65,17 @@ karpenter/resources:
   DISCOVER_SG_TAG_VALUE=$(CLUSTER_NAME) \
   DISCOVER_SUBNET_TAG_VALUE=$(CLUSTER_NAME) \
   envsubst | $(KUBECTL) apply -f -
-	
 	cat nodepool.yaml |  $(KUBECTL) apply -f -
+
+
+ebs/install:
+	helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+	helm repo update
+	$(HELM) upgrade --install aws-ebs-csi-driver  aws-ebs-csi-driver/aws-ebs-csi-driver --version "$(EBS_CSI_VERSION)" --namespace "kube-system" \
+  --set controller.k8sTagClusterId=$(CLUSTER_NAME) \
+  --set controller.serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$(shell terraform output -json | jq .info.value.ebs.iam_role_arn | sed 's/"//g' ) \
+  --wait
+
+k8s/workloads:
+	$(KUBECTL) apply -f workloads.yaml
+

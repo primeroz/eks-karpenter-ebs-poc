@@ -18,6 +18,9 @@ spec:
   - tags:
       karpenter.sh/discovery: ${DISCOVER_SUBNET_TAG_VALUE}
   userData:
+    #! /bin/bash
+    echo "Configure Kubelet for Graceful Node Termination"
+    # https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/docs/faq.md#what-steps-can-be-taken-to-mitigate-this-issue
     echo -e "InhibitDelayMaxSec=45\n" >> /etc/systemd/logind.conf
     systemctl restart systemd-logind
     echo "$(jq ".shutdownGracePeriod=\"45s\"" /etc/kubernetes/kubelet/kubelet-config.json)" > /etc/kubernetes/kubelet/kubelet-config.json

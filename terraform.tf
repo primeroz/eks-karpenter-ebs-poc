@@ -50,7 +50,9 @@ data "aws_caller_identity" "current" {}
 
 ## VPC 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.7.0"
+
 
   name = "${var.cluster_name}-vpc"
   cidr = "10.0.0.0/16"
@@ -171,6 +173,30 @@ module "karpenter" {
 
 ## -- END Karpenter
 
+## EBS Driver 
+
+data "aws_iam_policy" "ebs_csi_policy" {
+  arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+module "irsa-ebs-csi" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.37.2"
+
+  create_role                   = true
+  role_name                     = "AmazonEKSTFEBSCSIRole-${module.eks.cluster_name}"
+  provider_url                  = module.eks.oidc_provider
+  role_policy_arns              = [data.aws_iam_policy.ebs_csi_policy.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
+
+  tags = merge({
+    Terraform = "true"
+    Owner     = data.aws_caller_identity.current.user_id
+  }, var.tags)
+}
+
+## -- END EBS Driver
+
 ## Outputs 
 
 output "info" {
@@ -179,6 +205,9 @@ output "info" {
     eks = {
       cluster_name    = module.eks.cluster_name
       cluster_version = module.eks.cluster_version
+    }
+    ebs = {
+      iam_role_arn = module.irsa-ebs-csi.iam_role_arn
     }
     karpenter = {
       queue_name         = module.karpenter.queue_name
