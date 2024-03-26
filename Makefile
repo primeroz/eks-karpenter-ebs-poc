@@ -2,9 +2,12 @@ CLUSTER_NAME = "demo"
 CLUSTER_VERSION = "1.26"
 REGION = "eu-west-3"
 
+KARPENTER_VERSION := 0.35.2
+
 KUBECONFIG_PATH := /tmp/$(CLUSTER_NAME)-$(REGION)-kubeconfig
 export KUBECONFIG := $(shell echo $(KUBECONFIG_PATH) | sed 's/"//g')
 KUBECTL := kubectl --kubeconfig $(KUBECONFIG)
+HELM := helm --kubeconfig $(KUBECONFIG)
 
 TERRAFORM := terraform
 TF_OPTIONS := -var cluster_name=$(CLUSTER_NAME) -var region=$(REGION) -var cluster_version=$(CLUSTER_VERSION)
@@ -30,7 +33,7 @@ tf/destroy:
 tf/output:
 	terraform output -json | jq .info.value
 
-.PHONY: aws/validate eks/kubeconfig
+.PHONY: aws/validate eks/kubeconfig eks/validate
 
 aws/validate:
 	@aws sts get-caller-identity  > /dev/null
@@ -41,3 +44,16 @@ eks/kubeconfig: aws/validate
 eks/validate: eks/kubeconfig
 	$(KUBECTL) cluster-info
 	$(KUBECTL) get node 
+
+.PHONY: karpenter/install
+
+karpenter/install:
+	$(HELM) upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter --version "$(KARPENTER_VERSION)" --namespace "karpenter" --create-namespace \
+  --set settings.clusterName=$(CLUSTER_NAME) \
+  --set settings.interruptionQueue=$(shell terraform output -json | jq .info.value.karpenter.queue_name | sed 's/"//g' ) \
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$(shell terraform output -json | jq .info.value.karpenter.iam_role_arn | sed 's/"//g' ) \
+  --set controller.resources.requests.cpu=1 \
+  --set controller.resources.requests.memory=1Gi \
+  --set controller.resources.limits.cpu=1 \
+  --set controller.resources.limits.memory=1Gi \
+  --wait
