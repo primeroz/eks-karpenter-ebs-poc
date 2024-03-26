@@ -4,6 +4,7 @@ REGION = "eu-west-3"
 
 KUBECONFIG_PATH := /tmp/$(CLUSTER_NAME)-$(REGION)-kubeconfig
 export KUBECONFIG := $(shell echo $(KUBECONFIG_PATH) | sed 's/"//g')
+KUBECTL := kubectl --kubeconfig $(KUBECONFIG)
 
 TERRAFORM := terraform
 TF_OPTIONS := -var cluster_name=$(CLUSTER_NAME) -var region=$(REGION) -var cluster_version=$(CLUSTER_VERSION)
@@ -38,5 +39,5 @@ eks/kubeconfig: aws/validate
 	aws eks update-kubeconfig --region $(REGION) --name $(CLUSTER_NAME) --kubeconfig $(KUBECONFIG) > /dev/null
 
 eks/validate: eks/kubeconfig
-	kubectl --kubeconfig $(KUBECONFIG) cluster-info
-	kubectl --kubeconfig $(KUBECONFIG) get node 
+	$(KUBECTL) cluster-info
+	$(KUBECTL) get node 
