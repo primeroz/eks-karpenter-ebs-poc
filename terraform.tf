@@ -137,12 +137,17 @@ module "eks" {
 
 ## -- END EKS Cluster
 
+
+## Karpenter
+
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "20.8.4"
 
   cluster_name = module.eks.cluster_name
 
+  enable_irsa            = true
+  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
   # Attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -154,10 +159,9 @@ module "karpenter" {
   }, var.tags)
 }
 
-
-
-## Karpenter
-
-
-
 ## -- END Karpenter
+
+## Outputs 
+
+
+## -- End Outputs 

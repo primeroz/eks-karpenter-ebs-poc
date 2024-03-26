@@ -10,7 +10,7 @@ tf/validate: tf/init
 tf/plan: tf/validate
 	terraform plan
 	
-tf/apply: tf/plan 
+tf/apply: tf/validate
 	terraform apply
 	
 tf/destroy:
