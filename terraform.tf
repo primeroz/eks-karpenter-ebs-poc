@@ -1,3 +1,26 @@
+## Variables
+variable "region" {
+  description = "AWS Region"
+  type        = string
+}
+
+variable "tags" {
+  description = "A map of tags to add to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "cluster_name" {
+  description = "The name of the EKS cluster"
+  type        = string
+}
+
+variable "cluster_version" {
+  description = "EKS Cluster Version"
+  type        = string
+}
+## -- END Variables
+
 ## Configuration
 terraform {
   backend "local" {
@@ -13,7 +36,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-west-3"
+  region = var.region
 }
 
 data "aws_region" "current" {}
@@ -24,25 +47,6 @@ data "aws_availability_zones" "available" {
 
 data "aws_caller_identity" "current" {}
 ## -- END Configuration
-
-## Variables
-variable "tags" {
-  description = "A map of tags to add to all resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "cluster_name" {
-  description = "The name of the EKS cluster"
-  type        = string
-  default     = "demo"
-}
-
-variable "cluster_version" {
-  description = "EKS Cluster Version"
-  type        = string
-}
-## -- END Variables
 
 ## VPC 
 module "vpc" {
