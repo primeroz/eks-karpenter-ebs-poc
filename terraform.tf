@@ -64,7 +64,7 @@ module "vpc" {
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
-    "karpenter.sh/discovery" = var.cluster_name
+    "karpenter.sh/discovery"          = var.cluster_name
   }
 
   tags = merge({
@@ -79,8 +79,8 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.8.4"
 
-  cluster_name                   = var.cluster_name
-  cluster_version                = var.cluster_version
+  cluster_name    = var.cluster_name
+  cluster_version = var.cluster_version
 
   cluster_endpoint_public_access = true
 
@@ -171,7 +171,7 @@ module "karpenter" {
 
 output "info" {
 
-  value = jsonencode({
+  value = {
     eks = {
       cluster_name    = module.eks.cluster_name
       cluster_version = module.eks.cluster_version
@@ -181,7 +181,7 @@ output "info" {
       iam_role_arn       = module.karpenter.iam_role_arn
       node_iam_role_name = module.karpenter.node_iam_role_name
     }
-  })
+  }
 
 }
 

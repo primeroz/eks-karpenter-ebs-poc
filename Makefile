@@ -17,4 +17,4 @@ tf/destroy:
 	terraform destroy
 
 tf/output:
-	terraform output info| jq -r '.' | jq .
+	terraform output -json | jq .info.value
