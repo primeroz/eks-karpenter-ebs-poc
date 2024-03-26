@@ -163,5 +163,21 @@ module "karpenter" {
 
 ## Outputs 
 
+output "info" {
+
+  value = jsonencode({
+    eks = {
+      cluster_name    = module.eks.cluster_name
+      cluster_version = module.eks.cluster_version
+    }
+    karpenter = {
+      queue_name         = module.karpenter.queue_name
+      iam_role_arn       = module.karpenter.iam_role_arn
+      node_iam_role_name = module.karpenter.node_iam_role_name
+    }
+  })
+
+}
+
 
 ## -- End Outputs 

@@ -15,3 +15,6 @@ tf/apply: tf/validate
 	
 tf/destroy:
 	terraform destroy
+
+tf/output:
+	terraform output info| jq -r '.' | jq .
