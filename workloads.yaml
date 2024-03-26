@@ -34,7 +34,8 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: inflate-arm64
-        image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+        image: busybox
+        command: [ "sleep" , "infinity" ]
         resources:
           requests:
             cpu: 200m
