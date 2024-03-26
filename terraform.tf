@@ -59,7 +59,7 @@ module "vpc" {
   enable_vpn_gateway = true
 
   private_subnet_tags = {
-    "karpenter.sh/discovery" = "discovery-${var.cluster_name}"
+    "karpenter.sh/discovery" = var.cluster_name
   }
 
   tags = merge({
@@ -131,7 +131,7 @@ module "eks" {
   tags = merge({
     Terraform                = "true"
     Owner                    = data.aws_caller_identity.current.user_id
-    "karpenter.sh/discovery" = "discovery-${var.cluster_name}"
+    "karpenter.sh/discovery" = var.cluster_name
   }, var.tags)
 }
 
