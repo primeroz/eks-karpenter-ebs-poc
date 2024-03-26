@@ -1,0 +1,17 @@
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+
+# .tfvars files that are meant to be pushed (e.g., example.tfvars)
+*.auto.tfvars
+*.override.tf
+
+# Helm related files
+*.helmignore
+charts/
