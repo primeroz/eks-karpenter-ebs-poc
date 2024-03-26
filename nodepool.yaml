@@ -1,0 +1,49 @@
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: testarm64
+spec:
+  disruption:
+    budgets:
+    - nodes: 10%
+    consolidateAfter: 60s
+    consolidationPolicy: WhenEmpty
+    expireAfter: Never
+  template:
+    metadata:
+      annotations:
+        restart/epoch: "1"
+    spec:
+      nodeClassRef:
+        name: test
+      requirements:
+      - key: karpenter.k8s.aws/instance-category
+        operator: In
+        values:
+        - c
+        - m
+        - r
+      - key: karpenter.k8s.aws/instance-cpu
+        operator: In
+        values:
+        - "2"
+        - "4"
+      - key: karpenter.k8s.aws/instance-generation
+        operator: In
+        values:
+        - "5"
+        - "6"
+        - "7"
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - arm64
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        - spot
+      taints:
+      - effect: NoSchedule
+        key: karpenter
+        value: "true"
+  weight: 10

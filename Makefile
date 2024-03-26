@@ -45,7 +45,7 @@ eks/validate: eks/kubeconfig
 	$(KUBECTL) cluster-info
 	$(KUBECTL) get node 
 
-.PHONY: karpenter/install
+.PHONY: karpenter/install karpenter/resources
 
 karpenter/install:
 	$(HELM) upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter --version "$(KARPENTER_VERSION)" --namespace "karpenter" --create-namespace \
@@ -57,3 +57,12 @@ karpenter/install:
   --set controller.resources.limits.cpu=1 \
   --set controller.resources.limits.memory=1Gi \
   --wait
+
+karpenter/resources:
+	cat nodeclass.yaml | \
+  NODE_ROLE_NAME=$(shell terraform output -json | jq .info.value.karpenter.node_iam_role_name | sed 's/"//g' )  \
+  DISCOVER_SG_TAG_VALUE=$(CLUSTER_NAME) \
+  DISCOVER_SUBNET_TAG_VALUE=$(CLUSTER_NAME) \
+  envsubst | $(KUBECTL) apply -f -
+	
+	cat nodepool.yaml |  $(KUBECTL) apply -f -

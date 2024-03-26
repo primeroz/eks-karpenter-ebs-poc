@@ -1,0 +1,24 @@
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
+metadata:
+  name: test
+spec:
+  amiFamily: AL2
+  detailedMonitoring: false
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 2
+    httpTokens: required
+  role: ${NODE_ROLE_NAME}
+  securityGroupSelectorTerms:
+  - tags:
+      karpenter.sh/discovery: ${DISCOVER_SG_TAG_VALUE}
+  subnetSelectorTerms:
+  - tags:
+      karpenter.sh/discovery: ${DISCOVER_SUBNET_TAG_VALUE}
+  userData:
+    echo -e "InhibitDelayMaxSec=45\n" >> /etc/systemd/logind.conf
+    systemctl restart systemd-logind
+    echo "$(jq ".shutdownGracePeriod=\"45s\"" /etc/kubernetes/kubelet/kubelet-config.json)" > /etc/kubernetes/kubelet/kubelet-config.json
+    echo "$(jq ".shutdownGracePeriodCriticalPods=\"15s\"" /etc/kubernetes/kubelet/kubelet-config.json)" > /etc/kubernetes/kubelet/kubelet-config.json
