@@ -142,7 +142,7 @@ spec:
       - name: sleep-go-container
         image: golang:latest
         command: ["/bin/bash", "-c"]
-        args: ["go run /source/sleep.go 60"] # Pass the sleep duration as an argument (e.g., 10 seconds)
+        args: ["go run /source/sleep.go 72000"] # Pass the sleep duration as an argument (e.g., 10 seconds)
         resources:
           requests:
             cpu: 200m
