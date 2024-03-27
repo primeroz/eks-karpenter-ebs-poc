@@ -7,8 +7,7 @@ spec:
   disruption:
     budgets:
     - nodes: 10%
-    consolidateAfter: 60s
-    consolidationPolicy: WhenEmpty
+    consolidationPolicy: WhenUnderutilized
     expireAfter: Never
   template:
     metadata:
@@ -59,6 +58,7 @@ spec:
     - nodes: 10%
     consolidateAfter: 60s
     consolidationPolicy: WhenEmpty
+    #consolidationPolicy: WhenUnderutilized
     expireAfter: Never
   template:
     metadata:

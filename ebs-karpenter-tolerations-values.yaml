@@ -1,0 +1,16 @@
+---
+# Make sure we don't tolerate karpenter the karpenter.sh/disruption=disrupting:NoSchedule taint so that Karpenter can drain the pod
+node:
+  tolerateAllTaints: false
+  tolerations:
+  - operator: Exists
+    effect: NoExecute
+  - key: CriticalAddonsOnly
+    operator: Exists
+  - effect: NoSchedule
+    operator: Exists
+    key: karpenter
+    value: "true"
+  - effect: NoSchedule                            
+    operator: Exists
+    key: node.kubernetes.io/not-ready

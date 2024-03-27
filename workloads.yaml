@@ -15,16 +15,16 @@ spec:
       labels:
         app: inflate-arm64
     spec:
-      affinity:
-        podAntiAffinity: 
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: "app"
-                operator: In
-                values:
-                - inflate-arm64
-            topologyKey: "kubernetes.io/hostname"
+      #affinity:
+      #  podAntiAffinity: 
+      #    requiredDuringSchedulingIgnoredDuringExecution:
+      #    - labelSelector:
+      #        matchExpressions:
+      #        - key: "app"
+      #          operator: In
+      #          values:
+      #          - inflate-arm64
+      #      topologyKey: "kubernetes.io/hostname"
       nodeSelector:
         karpenter.sh/nodepool: testarm64
       terminationGracePeriodSeconds: 0
@@ -39,7 +39,7 @@ spec:
         command: [ "sleep" , "infinity" ]
         resources:
           requests:
-            cpu: 200m
+            cpu: 500m
         volumeMounts:
         - name: data
           mountPath: /pvc
@@ -51,116 +51,116 @@ spec:
       resources:
         requests:
           storage: 1Gi
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sleep-go-source
-  namespace: default                                                                                                                                                                                                                            
-data:
-  sleep.go: |
-    package main
-
-    import (
-        "fmt"
-        "os"
-        "os/signal"
-        "syscall"
-        "time"
-    )
-
-    func main() {
-        if len(os.Args) < 2 {
-            fmt.Println("Usage: ./program <seconds>")
-            os.Exit(1)
-        }
-
-        // Parse command line argument for sleep duration
-        seconds := os.Args[1]
-        duration, err := time.ParseDuration(seconds + "s")
-        if err != nil {
-            fmt.Println("Invalid duration:", err)
-            os.Exit(1)
-        }
-
-        // Create a channel to receive OS signals
-        sigChan := make(chan os.Signal, 1)
-        signal.Notify(sigChan, syscall.SIGTERM)
-
-        // Ignore SIGTERM
-        go func() {
-            for range sigChan {
-                fmt.Println("Ignoring SIGTERM")
-            }
-        }()
-
-        // Sleep for the specified duration
-        fmt.Printf("Sleeping for %s...\n", duration)
-        time.Sleep(duration)
-        fmt.Println("Done sleeping")
-
-        // Wait indefinitely, respecting SIGKILL
-        sigKill := make(chan os.Signal, 1)
-        signal.Notify(sigKill, syscall.SIGKILL)
-        <-sigKill
-    }
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: sleep-go-statefulset
-  namespace: default
-spec:
-  serviceName: sleep-go
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sleep-go
-  template:
-    metadata:
-      labels:
-        app: sleep-go
-    spec:
-      affinity:
-        podAntiAffinity: 
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: "app"
-                operator: In
-                values:
-                - sleep-go
-            topologyKey: "kubernetes.io/hostname"
-      nodeSelector:
-        karpenter.sh/nodepool: testarm64
-      tolerations:
-      - key: "karpenter"
-        operator: "Equal"
-        value: "true"
-        effect: "NoSchedule"
-      containers:
-      - name: sleep-go-container
-        image: golang:latest
-        command: ["/bin/bash", "-c"]
-        args: ["go run /source/sleep.go 72000"] # Pass the sleep duration as an argument (e.g., 10 seconds)
-        resources:
-          requests:
-            cpu: 200m
-        volumeMounts:
-        - name: source
-          mountPath: /source
-        - name: data
-          mountPath: /pvc
-      volumes:
-      - name: source
-        configMap:
-          name: sleep-go-source
-  volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
-
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: sleep-go-source
+#   namespace: default                                                                                                                                                                                                                            
+# data:
+#   sleep.go: |
+#     package main
+# 
+#     import (
+#         "fmt"
+#         "os"
+#         "os/signal"
+#         "syscall"
+#         "time"
+#     )
+# 
+#     func main() {
+#         if len(os.Args) < 2 {
+#             fmt.Println("Usage: ./program <seconds>")
+#             os.Exit(1)
+#         }
+# 
+#         // Parse command line argument for sleep duration
+#         seconds := os.Args[1]
+#         duration, err := time.ParseDuration(seconds + "s")
+#         if err != nil {
+#             fmt.Println("Invalid duration:", err)
+#             os.Exit(1)
+#         }
+# 
+#         // Create a channel to receive OS signals
+#         sigChan := make(chan os.Signal, 1)
+#         signal.Notify(sigChan, syscall.SIGTERM)
+# 
+#         // Ignore SIGTERM
+#         go func() {
+#             for range sigChan {
+#                 fmt.Println("Ignoring SIGTERM")
+#             }
+#         }()
+# 
+#         // Sleep for the specified duration
+#         fmt.Printf("Sleeping for %s...\n", duration)
+#         time.Sleep(duration)
+#         fmt.Println("Done sleeping")
+# 
+#         // Wait indefinitely, respecting SIGKILL
+#         sigKill := make(chan os.Signal, 1)
+#         signal.Notify(sigKill, syscall.SIGKILL)
+#         <-sigKill
+#     }
+# ---
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: sleep-go-statefulset
+#   namespace: default
+# spec:
+#   serviceName: sleep-go
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: sleep-go
+#   template:
+#     metadata:
+#       labels:
+#         app: sleep-go
+#     spec:
+#       affinity:
+#         podAntiAffinity: 
+#           requiredDuringSchedulingIgnoredDuringExecution:
+#           - labelSelector:
+#               matchExpressions:
+#               - key: "app"
+#                 operator: In
+#                 values:
+#                 - sleep-go
+#             topologyKey: "kubernetes.io/hostname"
+#       nodeSelector:
+#         karpenter.sh/nodepool: testarm64
+#       tolerations:
+#       - key: "karpenter"
+#         operator: "Equal"
+#         value: "true"
+#         effect: "NoSchedule"
+#       containers:
+#       - name: sleep-go-container
+#         image: golang:latest
+#         command: ["/bin/bash", "-c"]
+#         args: ["go run /source/sleep.go 72000"] # Pass the sleep duration as an argument (e.g., 10 seconds)
+#         resources:
+#           requests:
+#             cpu: 200m
+#         volumeMounts:
+#         - name: source
+#           mountPath: /source
+#         - name: data
+#           mountPath: /pvc
+#       volumes:
+#       - name: source
+#         configMap:
+#           name: sleep-go-source
+#   volumeClaimTemplates:
+#   - metadata:
+#       name: data
+#     spec:
+#       accessModes: [ "ReadWriteOnce" ]
+#       resources:
+#         requests:
+#           storage: 1Gi
+# 

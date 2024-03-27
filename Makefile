@@ -46,7 +46,7 @@ eks/validate: eks/kubeconfig
 	$(KUBECTL) cluster-info
 	$(KUBECTL) get node 
 
-.PHONY: karpenter/install karpenter/resources ebs/install k8s/workloads
+.PHONY: karpenter/install karpenter/resources ebs/prepare ebs/install ebs/install-karpenter-tolerations k8s/workloads
 
 karpenter/install:
 	$(HELM) upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter --version "$(KARPENTER_VERSION)" --namespace "karpenter" --create-namespace \
@@ -68,12 +68,21 @@ karpenter/resources:
 	cat nodepool.yaml |  $(KUBECTL) apply -f -
 
 
-ebs/install:
+ebs/prepare:
 	helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
 	helm repo update
+
+ebs/install: ebs/prepare
 	$(HELM) upgrade --install aws-ebs-csi-driver  aws-ebs-csi-driver/aws-ebs-csi-driver --version "$(EBS_CSI_VERSION)" --namespace "kube-system" \
   --set controller.k8sTagClusterId=$(CLUSTER_NAME) \
   --set controller.serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$(shell terraform output -json | jq .info.value.ebs.iam_role_arn | sed 's/"//g' ) \
+  --wait
+
+ebs/install-karpenter-tolerations: ebs/prepare
+	$(HELM) upgrade --install aws-ebs-csi-driver  aws-ebs-csi-driver/aws-ebs-csi-driver --version "$(EBS_CSI_VERSION)" --namespace "kube-system" \
+  --set controller.k8sTagClusterId=$(CLUSTER_NAME) \
+  --set controller.serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$(shell terraform output -json | jq .info.value.ebs.iam_role_arn | sed 's/"//g' ) \
+  -f ebs-karpenter-tolerations-values.yaml \
   --wait
 
 k8s/workloads:
