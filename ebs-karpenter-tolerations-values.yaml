@@ -10,7 +10,6 @@ node:
   - effect: NoSchedule
     operator: Exists
     key: karpenter
-    value: "true"
   - effect: NoSchedule                            
     operator: Exists
     key: node.kubernetes.io/not-ready

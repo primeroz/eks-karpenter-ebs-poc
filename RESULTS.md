@@ -122,8 +122,21 @@ make ebs/install-karpenter-tolerations
 #### Tests 
 
 * **Delete node with karpenter finalizer** - `kubectl delte node XXX`
-  * TODO
+  * :x: -> `Trigger Multi Attach error with 6 minutes wait`
 * **Delete nodeclaim with karpenter finalizer** - `kubectl delete nodeclaim XXX`
-  * TODO
+  * :x: -> `Trigger Multi Attach error with 6 minutes wait`
 * **Patch nodepool to replace nodes through Drift manager** -> `kubectl patch nodepool testarm64 --type merge -p '{"spec":{"template":{"metadata":{"annotations":{"restart/epoch":"'"$(date +%s)"'"}}}}}'`
-  * TODO
+  * :x: -> `Trigger Multi Attach error with 6 minutes wait`
+
+
+* The kube-system/ebs-csi-node pod is not being evicted by karpenter as part of the drain after the inflate pod , but this does not address the problem :thinking-face:
+```
+default       0s          Normal    Evicted                      pod/inflate-arm64-0                             Evicted pod
+kube-system   0s          Normal    Evicted                      pod/ebs-csi-node-cp49h                          Evicted pod
+kube-system   0s          Normal    Killing                      pod/ebs-csi-node-cp49h                          Stopping container ebs-plugin
+kube-system   0s          Normal    Killing                      pod/ebs-csi-node-cp49h                          Stopping container liveness-probe
+kube-system   0s          Normal    Killing                      pod/ebs-csi-node-cp49h                          Stopping container node-driver-registrar
+
+... some time ...
+default       0s          Warning   FailedAttachVolume            pod/inflate-arm64-0                                Multi-Attach error for volume "pvc-10104513-ea96-432e-868e-330eb14ea2bb" Volume is already exclusively attached to one node and can't be attached to another
+```
